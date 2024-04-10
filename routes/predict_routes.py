@@ -1,3 +1,4 @@
+
 import base64
 
 import matplotlib.pyplot as plt
@@ -8,6 +9,13 @@ import torch.nn.functional as F
 import torchvision.models as models
 from flask import request, jsonify, Blueprint
 from module.processing import Model
+
+
+predict_bp = Blueprint('predict_bp', __name__)
+
+method = "0"
+selected_model = "2"
+
 import os
 
 predict_bp = Blueprint('predict_bp', __name__)
@@ -15,6 +23,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 method = "0"
 selected_model = "1"
+
 
 
 @predict_bp.route('/predict/predict-method', methods=['POST'])
@@ -37,7 +46,7 @@ def chose_model():
     model_value = request.json.get('model')
     if model_value is not None:
         try:
-            selected_model = int(model_value)
+            selected_model = model_value
             return jsonify({'code': 200, 'msg': f"Model updated to: {selected_model}"}), 200
         except ValueError:
             return jsonify({'code': 400, 'msg': "无效的模型值。它应该是一个数字"}), 400
@@ -49,7 +58,6 @@ def chose_model():
 @predict_bp.route('/predict/upload-file', methods=['POST'])
 def upload_file():
     global selected_model, method
-    os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
     received_file = request.files.get('input_image')  # 使用get方法获取文件，避免出错
     if received_file:
         image_file_name = received_file.filename
