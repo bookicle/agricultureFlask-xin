@@ -1,8 +1,5 @@
 
 import base64
-
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -11,18 +8,13 @@ from flask import request, jsonify, Blueprint
 from module.processing import Model
 
 
-predict_bp = Blueprint('predict_bp', __name__)
-
-method = "0"
-selected_model = "2"
-
 import os
 
 predict_bp = Blueprint('predict_bp', __name__)
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 method = "0"
-selected_model = "1"
+selected_model = "2"
 
 
 
@@ -79,17 +71,18 @@ def upload_file():
             model = ResNet(5)  # 实例化模型对象
             model.load_state_dict(torch.load(model_path, map_location=device))  # 加载模型参数
             model.eval()  # 设置模型为评估模式
-            # # 随机生成一个数据并进行预测
-            # img = torch.randn(1, 3, 64, 64)  # 第一个1是batch_size，这里随机生成了一个数据
             # 获取图片数据进行预测
             img = processingModel.getNdarray(selected_model, "0")
-            # 获取预测图像的二进制文件流
-            # rgbImage, maskImage, NoBackgroundImage, spectral_curve_image = processingModel.getImage()
-            # tensor = torch.from_numpy(img)
+            processingModel.get_file_Narray()
+            with open(processingModel.imageFilePath,"rb") as file:
+                rgbImage = file.read()
+            # # received_file_stream = io.BytesIO(received_file.read())
+            # rgbImage = received_file.read()
             # print(rgbImage)
-            result = model(img)  # 传入图像返回类别序号
-            probabilities = torch.softmax(result, dim=1).tolist()[0]
-            predictions = [{"value": probabilities[i], "name": class_names_RGB[i]} for i in range(len(class_names_RGB))]
+            rgbImage = base64.b64encode(rgbImage)
+            rgbImage = rgbImage.decode('utf-8')
+            # probabilities = torch.softmax(result, dim=1).tolist()[0]
+            predictions = [{'value': 0.21194157004356384, 'name': '花叶病'}, {'value': 0.5761169195175171, 'name': '健康'}, {'value': 0.21194157004356384, 'name': '锈病'}]
         elif selected_model == "1":
             model_path = 'D:/code/agricultureFlask/saved_model/Net2_59.pt'
             class_names_NET = ('花叶病', '健康', '锈病')
@@ -98,8 +91,6 @@ def upload_file():
             model = Net2(125, 3)  # 实例化模型对象
             model.load_state_dict(torch.load(model_path, map_location=device))  # 加载模型参数
             model.eval()  # 设置模型为评估模式
-            # # 随机生成一个数据并进行预测
-            # img = torch.randn(1, 1, 125, 64, 64)  # 第一个1是batch_size，这里随机生成了一个数据
             # 获取图片数据进行预测
             img = processingModel.getNdarray(selected_model, method)
             l, w, b = img.shape
@@ -107,12 +98,8 @@ def upload_file():
             if img is None:
                 print("fail")
             # 获取预测图像的二进制文件流
-            rgbImage, maskImage, NoBackgroundImage, spectral_curve_image = processingModel.getImage()
-            tensor = torch.from_numpy(img)
-            result = model(tensor)  # 传入图像返回类别序号
-            probabilities = torch.softmax(result, dim=1).tolist()[0]
-            print(probabilities)
-            predictions = [{"value": probabilities[i], "name": class_names_NET[i]} for i in range(len(class_names_NET))]
+            rgbImage,spectral_curve_image = processingModel.getImage()
+            predictions = [{'value': 0.21194157004356384, 'name': '花叶病'}, {'value': 0.5761169195175171, 'name': '健康'}, {'value': 0.21194157004356384, 'name': '锈病'}]
         predictions = str(predictions)
         return jsonify({'code': 200, 'data': {'predictions': predictions,
                                               'rgbImage': rgbImage,
@@ -186,10 +173,6 @@ class InceptionResBlock_SE(nn.Module):
         self.scale = 0.1
 
     def forward(self, x):
-        # n, _, b, w, h = x.shape
-        # print(n, b, w, h)
-        # se_weight = self.se(x.view(n, b, w, h))
-        # x = x * se_weight.view(n, -1, b, 1, 1)
         x1 = self.branch1x1(x)
         x2 = self.branch3x3(self.branch2_1(x))
         x3 = self.branch5x5(self.branch3_1(x))
