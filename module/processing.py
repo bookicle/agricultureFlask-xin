@@ -84,9 +84,9 @@ class Model(object):
         return rgb_data, sc_data
 
     # 删除临时图像
-    # def deleteImage(self):
-        # os.remove(self.rgbImage)
-        # os.remove(self.spectral_curve_image)
+    def deleteImage(self):
+        os.remove(self.rgbImage)
+        os.remove(self.spectral_curve_image)
 
     # 获取RGB图像
     def getRGBImage(self):
