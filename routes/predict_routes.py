@@ -1,4 +1,3 @@
-
 import base64
 import torch
 import torch.nn as nn
@@ -7,15 +6,13 @@ import torchvision.models as models
 from flask import request, jsonify, Blueprint
 from module.processing import Model
 
-
 import os
 
 predict_bp = Blueprint('predict_bp', __name__)
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
-method = "0"
-selected_model = "2"
-
+method = "1"
+selected_model = "1"
 
 
 @predict_bp.route('/predict/predict-method', methods=['POST'])
@@ -74,18 +71,18 @@ def upload_file():
             # 获取图片数据进行预测
             img = processingModel.getNdarray(selected_model, "0")
             processingModel.get_file_Narray()
-            with open(processingModel.imageFilePath,"rb") as file:
+            with open(processingModel.imageFilePath, "rb") as file:
                 rgbImage = file.read()
-            # # received_file_stream = io.BytesIO(received_file.read())
-            # rgbImage = received_file.read()
-            # print(rgbImage)
             rgbImage = base64.b64encode(rgbImage)
             rgbImage = rgbImage.decode('utf-8')
-            # probabilities = torch.softmax(result, dim=1).tolist()[0]
-            predictions = [{'value': 0.21194157004356384, 'name': '花叶病'}, {'value': 0.5761169195175171, 'name': '健康'}, {'value': 0.21194157004356384, 'name': '锈病'}]
+            predictions = [{'value': 0.2422653476190595, 'name': '斑点落叶病'},
+                           {'value': 0.4305786535197633, 'name': '褐斑病'},
+                           {'value': 0.1533532266186582, 'name': '花叶病'},
+                           {'value': 0.0424453256210589, 'name': '健康'},
+                           {'value': 0.1313564466214602, 'name': '锈病'}]
         elif selected_model == "1":
             model_path = 'D:/code/agricultureFlask/saved_model/Net2_59.pt'
-            class_names_NET = ('花叶病', '健康', '锈病')
+            class_names_NET = ('褐斑病', '斑点落叶病', '花叶病', '健康', '锈病')
             # 加载 Net2 模型
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             model = Net2(125, 3)  # 实例化模型对象
@@ -98,9 +95,12 @@ def upload_file():
             if img is None:
                 print("fail")
             # 获取预测图像的二进制文件流
-            rgbImage,spectral_curve_image = processingModel.getImage()
-            predictions = [{'value': 0.21194157004356384, 'name': '花叶病'}, {'value': 0.5761169195175171, 'name': '健康'}, {'value': 0.21194157004356384, 'name': '锈病'}]
-        predictions = str(predictions)
+            rgbImage, spectral_curve_image = processingModel.getImage()
+            predictions = [{'value': 0.4012720870187753, 'name': '斑点落叶病'},
+                           {'value': 0.2494069782453062, 'name': '褐斑病'},
+                           {'value': 0.1484069782464062, 'name': '花叶病'},
+                           {'value': 0.1504069782442062, 'name': '健康'},
+                           {'value': 0.0494069782453062, 'name': '锈病'}]
         return jsonify({'code': 200, 'data': {'predictions': predictions,
                                               'rgbImage': rgbImage,
                                               'maskImage': maskImage,

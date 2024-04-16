@@ -18,6 +18,7 @@ class Model(object):
         :param inputFile:输入文件流
         :param imageFileName:输入文件名
         """
+        self.pre_img = None
         self.rgb_img = None
         self.rgbImage = None
         self.img = None
@@ -68,6 +69,7 @@ class Model(object):
             reshaped_data = self.img.reshape((l * w, b))
             print(reshaped_data)
             reshaped_data = process_Ndarry(methodType, reshaped_data)
+            self.pre_img = reshaped_data
             reshaped_data = reshaped_data.reshape(l, w, b)
             return reshaped_data
         else:
@@ -76,15 +78,15 @@ class Model(object):
     # 获取所有图像
     def getImage(self):
         self.getRGBImage()
-        self.spectral_curve_image = spectra_plot(self.img, (0, 0), self.file_name)
+        self.spectral_curve_image = spectra_plot(self.pre_img)
         rgb_data = getImageStream(self.rgbImage)
         sc_data = getImageStream(self.spectral_curve_image)
         return rgb_data, sc_data
 
     # 删除临时图像
-    def deleteImage(self):
-        os.remove(self.rgbImage)
-        os.remove(self.spectral_curve_image)
+    # def deleteImage(self):
+        # os.remove(self.rgbImage)
+        # os.remove(self.spectral_curve_image)
 
     # 获取RGB图像
     def getRGBImage(self):
@@ -108,6 +110,7 @@ class Model(object):
         self.rgb_img = rgb_img
         # print(rgb_img)
         # 保存合成的RGB图像
+        plt.figure()
         self.rgbImage = f"../result/rgb_image.png"
         plt.imshow(rgb_img)
         plt.imsave(self.rgbImage, rgb_img)
@@ -193,20 +196,20 @@ def process_Ndarry(method, data):
 
 
 # 沿波段方向绘制某一像素波谱曲线
-def spectra_plot(img, position, image_file_name):
-    x, y = position
+def spectra_plot(img):
     # 提取光谱数据
-    spectra = img[x, y, :].reshape(img.shape[2])
+    spectra = img.mean(axis=0)
 
     # 创建波段索引
-    wavelengths = np.arange(0, img.shape[2])
+    wavelengths = np.arange(0, img.shape[1])
 
+    plt.figure()
+    plt.title(f'Spectral Curve')
     # 绘制光谱曲线
     plt.plot(wavelengths, spectra)
+    plt.show()
     plt.xlabel('Wavelength')
     plt.ylabel('Intensity')
-    plt.title(f'Spectral Curve of ({x},{y})')
     file_name = "../result/spectral_curve_image.png"
     plt.savefig(file_name)
     return file_name
-
